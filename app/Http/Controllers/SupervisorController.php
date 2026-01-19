@@ -82,6 +82,8 @@ class SupervisorController extends Controller
         ]);
 
         DB::transaction(function() use ($request) {
+            $alBalance = $request->intern_duration;
+            
             $user = User::create([
                 'employee_id' => $request->employee_id,
                 'name' => $request->name,
@@ -96,6 +98,7 @@ class SupervisorController extends Controller
                 'report_date' => $request->report_date,
                 'intern_duration' => $request->intern_duration,
                 'end_date' => $request->end_date,
+                'al_balance' => $alBalance,
             ]);
         });
 
