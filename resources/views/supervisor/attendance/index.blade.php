@@ -64,8 +64,8 @@
                     <option value="">All Status</option>
                     <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>Present</option>
                     <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>Late</option>
-                    <option value="half-day" {{ request('status') === 'half-day' ? 'selected' : '' }}>Half Day</option>
-                    <option value="on-leave" {{ request('status') === 'on-leave' ? 'selected' : '' }}>On Leave</option>
+                    <option value="half day" {{ request('status') === 'half day' ? 'selected' : '' }}>Half Day</option>
+                    <option value="on leave" {{ request('status') === 'on leave' ? 'selected' : '' }}>On Leave</option>
                 </select>
 
                 <!-- Date Range Picker -->
