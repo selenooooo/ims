@@ -12,12 +12,14 @@ class InternLeave extends Model
         'leave_type_id',
         'leave_date',
         'half_day',
+        'leave_days',
         'status',
         'reason'
     ];
 
     protected $casts = [
         'leave_date' => 'datetime',
+        'leave_days' => 'decimal:1'
     ];
 
     public function user()

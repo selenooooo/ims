@@ -10,6 +10,38 @@
             </a>
         </div>
 
+        <!-- Annual Leave Balance -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-gray-700 uppercase">
+                    Annual Leave Balance
+                </h2>
+
+                <span class="text-sm text-gray-500">
+                    {{ $alUsed }} / {{ $alTotal }}
+                </span>
+            </div>
+
+            @php
+                $alPercent = $alTotal > 0 ? ($alUsed / $alTotal) * 100 : 0;
+            @endphp
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div
+                    class="bg-blue-600 h-3 rounded-full transition-all"
+                    style="width: {{ $alPercent }}%">
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-600">
+                Remaining:
+                <span class="font-semibold text-gray-900">
+                    {{ $alRemaining }} day{{ $alRemaining != 1 ? 's' : '' }}
+                </span>
+            </p>
+        </div>
+
         <!-- Leave Table -->
         <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
