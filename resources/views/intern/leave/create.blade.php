@@ -4,6 +4,26 @@
         <h1 class="text-2xl font-bold text-gray-900">Request Leave</h1>
 
         <form action="{{ route('intern.leave.store') }}" method="POST" class="bg-white shadow p-6 rounded-xl space-y-4">
+
+            @if(session('warning'))
+            <div 
+                x-data="{ show: true }" 
+                x-show="show" 
+                x-transition 
+                x-init="setTimeout(() => show = false, 5000)" 
+                class="fixed top-5 inset-x-0 flex justify-center z-50">
+                <div class="bg-red-500 text-white top-5 px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                    <span>{{ session('warning') }}</span>
+                    <button 
+                        type="button" 
+                        @click="show = false" 
+                        class="ml-auto text-white font-bold px-2 py-1 rounded hover:bg-red-600">
+                        &times;
+                    </button>
+                </div>
+            </div>
+            @endif
+            
             @csrf
             <div>
                 <label class="block text-gray-700 font-medium">Date</label>

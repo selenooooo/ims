@@ -25,7 +25,6 @@ class LeaveController extends Controller
     {
         abort_if(auth()->user()->role !== 'intern', 403);
 
-        // Validate request
         $request->validate([
             'leave_type_id' => 'required|exists:leave_types,id',
             'leave_date' => 'required|date',
@@ -36,28 +35,29 @@ class LeaveController extends Controller
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
         $intern = auth()->user()->intern;
 
-        // Determine leave_days based on half_day
         $leave_days = $request->half_day === 'full' ? 1.0 : 0.5;
 
-        // Only check AL balance if leave type is Annual Leave
-        if ($leaveType->code === 'AL' && $intern->al_balance < $leave_days) {
-            return back()->withErrors([
-                'leave_type_id' => 'Insufficient Annual Leave balance.'
-            ]);
+        // SINGLE SOURCE OF TRUTH
+        if ($leaveType->code === 'AL') {
+
+            if ($intern->al_balance < $leave_days) {
+                return back()->with('warning', 
+                    "Cannot apply Annual Leave. Remaining balance: {$intern->al_balance} day(s)."
+                );
+            }
         }
 
-        // Create leave record
-        $leave = InternLeave::create([
+        InternLeave::create([
             'user_id' => auth()->id(),
             'leave_type_id' => $request->leave_type_id,
             'leave_date' => $request->leave_date,
             'half_day' => $request->half_day,
             'leave_days' => $leave_days,
             'reason' => $request->reason,
-            'status' => $leaveType->code === 'AL' ? 'approved' : 'pending', // auto-approve AL, others pending
+            'status' => 'pending',
         ]);
 
-        // Deduct AL balance if Annual Leave
+        // Safe deduction
         if ($leaveType->code === 'AL') {
             $intern->decrement('al_balance', $leave_days);
         }
@@ -71,7 +71,7 @@ class LeaveController extends Controller
     {
         $user = auth()->user();
 
-        $query = InternLeave::where('user_id', auth()->id())
+        $query = InternLeave::where('user_id', $user->id)
             ->with('leaveType');
 
         if ($request->filled('filter') && in_array($request->filter, ['pending', 'approved', 'rejected'])) {
@@ -80,16 +80,12 @@ class LeaveController extends Controller
 
         $leaves = $query->orderBy('leave_date', 'desc')->get();
 
-        // AL BALANCE LOGIC
+        // AL DISPLAY
         $intern = $user->intern;
-        $alTotal = $intern->intern_duration;
 
-        $alUsed = InternLeave::where('user_id', $user->id)
-            ->whereHas('leaveType', fn($q) => $q->where('code', 'AL'))
-            ->where('status', 'approved')
-            ->sum('leave_days');
-
-        $alRemaining = max($alTotal - $alUsed, 0);
+        $alTotal = $intern->intern_duration;   // yearly quota
+        $alRemaining = $intern->al_balance;    // live balance
+        $alUsed = $alTotal - $alRemaining;     // derived value
 
         return view('intern.leave.index', compact(
             'leaves',
@@ -109,6 +105,11 @@ class LeaveController extends Controller
             $intern = auth()->user()->intern;
             $restore = $leave->leave_days ?? ($leave->half_day === 'full' ? 1.0 : 0.5);
             $intern->increment('al_balance', $restore);
+        }
+
+        // Remove attendance if exists
+        if ($leave->attendance) {
+            $leave->attendance->delete();
         }
 
         $leave->delete();
@@ -143,16 +144,6 @@ class LeaveController extends Controller
 
         $leave->update(['status' => 'approved']);
 
-        // Deduct AL only if Annual Leave
-        if ($leave->leaveType->code === 'AL') {
-            $intern = $leave->user->intern;
-            $deduction = $leave->half_day === 'full' ? 1.0 : 0.5;
-
-            if ($intern && $intern->al_balance >= $deduction) {
-                $intern->decrement('al_balance', $deduction);
-            }
-        }
-
         Attendance::updateOrCreate(
             [
                 'user_id' => $leave->user_id,
@@ -173,8 +164,21 @@ class LeaveController extends Controller
     public function reject(InternLeave $leave)
     {
         abort_if(auth()->user()->role !== 'supervisor', 403);
+
+        // Prevent double reject
+        if ($leave->status === 'rejected') {
+            return back();
+        }
+
+        // Restore AL balance if Annual Leave
+        if ($leave->leaveType->code === 'AL') {
+            $intern = $leave->user->intern;
+            $intern->increment('al_balance', $leave->leave_days);
+        }
+
         $leave->update(['status' => 'rejected']);
-        return back();
+
+        return back()->with('success', 'Leave rejected successfully.');
     }
 
     public function createSupervisor()
@@ -189,27 +193,44 @@ class LeaveController extends Controller
 
     public function storeSupervisor(Request $request)
     {
+        $skippedInterns = [];
+        $appliedCount = 0;
+
         abort_if(auth()->user()->role !== 'supervisor', 403);
 
         $request->validate([
             'leave_date' => 'required|date',
             'leave_type_id' => 'required|exists:leave_types,id',
             'half_day' => 'required|in:full,am,pm',
-            'user_id' => 'required', // can be 'all' or an intern ID
+            'user_id' => 'required',
             'reason' => 'nullable|string',
         ]);
 
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
         $leave_days = $request->half_day === 'full' ? 1.0 : 0.5;
 
-        // Function to create leave + attendance + deduct AL
-        $createLeave = function(User $intern) use ($request, $leaveType, $leave_days) {
-            if ($leaveType->code === 'AL' && $intern->intern->al_balance >= $leave_days) {
-                $intern->intern->decrement('al_balance', $leave_days);
+        $createLeave = function (User $user) use (
+            $request,
+            $leaveType,
+            $leave_days,
+            &$skippedInterns,
+            &$appliedCount
+        ) {
+            $intern = $user->intern;
+
+            // AL not enough → skip
+            if ($leaveType->code === 'AL' && $intern->al_balance < $leave_days) {
+                $skippedInterns[] = $user->name;
+                return;
+            }
+
+            // Deduct AL
+            if ($leaveType->code === 'AL') {
+                $intern->decrement('al_balance', $leave_days);
             }
 
             $leave = InternLeave::create([
-                'user_id' => $intern->id,
+                'user_id' => $user->id,
                 'leave_type_id' => $request->leave_type_id,
                 'leave_date' => $request->leave_date,
                 'half_day' => $request->half_day,
@@ -220,7 +241,7 @@ class LeaveController extends Controller
 
             Attendance::updateOrCreate(
                 [
-                    'user_id' => $intern->id,
+                    'user_id' => $user->id,
                     'attendance_date' => $request->leave_date
                 ],
                 [
@@ -231,17 +252,59 @@ class LeaveController extends Controller
                     'total_hours' => 0
                 ]
             );
+
+            $appliedCount++;
         };
 
         if ($request->user_id === 'all') {
             User::where('role', 'intern')->get()->each($createLeave);
         } else {
-            $intern = User::findOrFail($request->user_id);
-            $createLeave($intern);
+            $user = User::findOrFail($request->user_id);
+            $createLeave($user);
         }
 
-        return redirect()
-            ->route('supervisor.leave.index')
-            ->with('success', 'Leave added successfully.');
+        if ($appliedCount > 0) {
+            session()->flash('success', "Leave applied successfully for {$appliedCount} intern(s).");
+        }
+
+        if (!empty($skippedInterns)) {
+            session()->flash('warning', "Skipped due to insufficient AL: " . implode(', ', $skippedInterns) . ".");
+        }
+
+        return redirect()->route('supervisor.leave.create');
     }
+
+    public function destroyBySupervisor(InternLeave $leave)
+    {
+        abort_if(auth()->user()->role !== 'supervisor', 403);
+
+        // UI already handles this, but backend must secured
+        if ($leave->status !== 'approved') {
+            return back()->with('error', 'Only approved leave can be removed.');
+        }
+
+        if (\Carbon\Carbon::parse($leave->leave_date)->isPast()) {
+            return back()->with('error', 'Past leave cannot be removed.');
+        }
+
+        // Restore AL balance
+        if ($leave->leaveType->code === 'AL') {
+            $intern = $leave->user->intern;
+
+            if ($intern) {
+                $intern->increment('al_balance', $leave->leave_days);
+            }
+        }
+
+        // Remove attendance if exists
+        if ($leave->attendance) {
+            $leave->attendance->delete();
+        }
+
+        $leave->delete();
+
+        return back()->with('success', 'Leave removed and balance restored.');
+    }
+  
+
 }
