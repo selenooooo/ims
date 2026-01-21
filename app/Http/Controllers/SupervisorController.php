@@ -41,29 +41,39 @@ class SupervisorController extends Controller
 
     public function updateAttendance(Request $request, Attendance $attendance)
     {
+        abort_if(auth()->user()->role !== 'supervisor', 403);
+
         $request->validate([
-            'check_in' => 'nullable|date_format:H:i',
-            'check_out' => 'nullable|date_format:H:i|after:check_in',
+            'check_in' => 'required|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i|after_or_equal:check_in', // strictly check
+        ], [
+            'check_out.after_or_equal' => 'Check-out time cannot be earlier than check-in time.',
         ]);
 
-        // Convert H:i to datetime for DB
-        if ($request->check_in) {
-            $attendance->check_in = Carbon::today()->setTimeFromTimeString($request->check_in);
+        $checkIn = $request->check_in;
+        $checkOut = $request->check_out;
+
+        $cutoffLate = '09:00';
+
+        if ($checkIn > $cutoffLate) {
+            $status = 'late';
+        } else {
+            $status = 'present';
         }
 
-        if ($request->check_out) {
-            $attendance->check_out = Carbon::today()->setTimeFromTimeString($request->check_out);
+        // If the day is a leave day
+        if ($attendance->leave_id) {
+            $status = 'on leave';
         }
 
-        // Calculate total hours if both times exist
-        if ($attendance->check_in && $attendance->check_out) {
-            $start = Carbon::parse($attendance->check_in);
-            $end = Carbon::parse($attendance->check_out);
-            $attendance->total_hours = round($end->diffInMinutes($start) / 60, 2);
-            $attendance->status = 'present';
-        }
-
-        $attendance->save();
+        // Update attendance
+        $attendance->update([
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'status' => $status,
+            // if no check out time, 0 total hrs 
+            'total_hours' => ($checkIn && $checkOut) ? round((strtotime($checkOut) - strtotime($checkIn)) / 3600, 2) : 0,
+        ]);
 
         return back()->with('success', 'Attendance updated successfully.');
     }

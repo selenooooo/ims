@@ -10,36 +10,38 @@
             </a>
         </div>
 
+        @php
+            $alPercent = $alTotal > 0 ? ($alRemaining/ $alTotal) * 100 : 0;
+        @endphp
+
         <!-- Annual Leave Balance -->
-        <div class="bg-white rounded-xl shadow p-6">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="text-sm font-semibold text-gray-700 uppercase">
-                    Annual Leave Balance
-                </h2>
+        <div class="w-full md:w-1/2">
+            <div class=" bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-m font-semibold text-gray-700 uppercase tracking-wide">
+                        Annual Leave Balance
+                    </h2>
+                </div>
 
-                <span class="text-sm text-gray-500">
-                    {{ $alUsed }} / {{ $alTotal }}
-                </span>
-            </div>
+                <div class="flex items-end justify-between mb-4">
+                    <div>
+                        <p class="text-3xl font-semibold text-gray-900">
+                            {{ $alRemaining }}
+                            <span class="text-sm font-medium text-gray-700">days remaining</span>
+                        </p>
+                        <p class="text-xs text-gray-700 mt-1">
+                            Total entitlement: {{ $alTotal }} days
+                        </p>
+                    </div>
+                </div>
 
-            @php
-                $alPercent = $alTotal > 0 ? ($alUsed / $alTotal) * 100 : 0;
-            @endphp
-
-            <!-- Progress Bar -->
-            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
-                <div
-                    class="bg-blue-600 h-3 rounded-full transition-all"
-                    style="width: {{ $alPercent }}%">
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                        class="bg-gray-600 h-2 transition-all duration-500"
+                        style="width: {{ $alPercent }}%">
+                    </div>
                 </div>
             </div>
-
-            <p class="text-sm text-gray-600">
-                Remaining:
-                <span class="font-semibold text-gray-900">
-                    {{ $alRemaining }} day{{ $alRemaining != 1 ? 's' : '' }}
-                </span>
-            </p>
         </div>
 
         <!-- Leave Table -->
