@@ -10,6 +10,40 @@
             </a>
         </div>
 
+        @php
+            $alPercent = $alTotal > 0 ? ($alRemaining/ $alTotal) * 100 : 0;
+        @endphp
+
+        <!-- Annual Leave Balance -->
+        <div class="w-full md:w-1/2">
+            <div class=" bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-m font-semibold text-gray-700 uppercase tracking-wide">
+                        Annual Leave Balance
+                    </h2>
+                </div>
+
+                <div class="flex items-end justify-between mb-4">
+                    <div>
+                        <p class="text-3xl font-semibold text-gray-900">
+                            {{ $alRemaining }}
+                            <span class="text-sm font-medium text-gray-700">days remaining</span>
+                        </p>
+                        <p class="text-xs text-gray-700 mt-1">
+                            Total entitlement: {{ $alTotal }} days
+                        </p>
+                    </div>
+                </div>
+
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                        class="bg-gray-600 h-2 transition-all duration-500"
+                        style="width: {{ $alPercent }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Leave Table -->
         <div class="bg-white rounded-xl shadow p-6 overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">

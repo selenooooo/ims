@@ -73,21 +73,21 @@
                                         <div class="text-sm text-gray-900 font-medium">
                                             {{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('h:i A') : '--:--' }}
                                         </div>
-                                        @if($attendance->check_in)
+                                        <!-- @if($attendance->check_in)
                                             <div class="text-xs text-gray-500">
                                                 {{ \Carbon\Carbon::parse($attendance->check_in)->format('g:i A') }}
                                             </div>
-                                        @endif
+                                        @endif -->
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 font-medium">
                                             {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('h:i A') : '--:--' }}
                                         </div>
-                                        @if($attendance->check_out)
+                                        <!-- @if($attendance->check_out)
                                             <div class="text-xs text-gray-500">
                                                 {{ \Carbon\Carbon::parse($attendance->check_out)->format('g:i A') }}
                                             </div>
-                                        @endif
+                                        @endif -->
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <!-- @php
