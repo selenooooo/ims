@@ -15,6 +15,58 @@
                     <i class="fas fa-plus"></i> Add Leave
                 </a>
             </div>
+
+            @php
+                $message = session('success') ?? session('warning');
+                $bgColor = session('success') ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+            @endphp
+
+            @if($message)
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition class="fixed top-5 inset-x-0 flex justify-center z-50">
+                    <div class="{{ $bgColor }} text-white px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                        <span>{{ $message }}</span>
+                        <button type="button" @click="show = false" class="ml-auto text-white font-bold px-2 py-1 rounded">&times;</button>
+                    </div>
+                </div>
+            @endif
+
+        </div>
+
+        <!-- Annual Leave Balance -->
+        <div class="w-full md:w-1/4">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+
+                <!-- Header -->
+                <div class="flex items-center gap-2 text-sm mb-4">
+                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                        Annual Leave Balance
+                    </h2>
+                    <span class="text-xs text-green-500">
+                        (Active interns)
+                    </span>
+                </div>
+
+                <!-- AL Balance List -->
+                <div class="space-y-2">
+                    @forelse($internALBalances as $intern)
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium text-gray-800">
+                                {{ optional($intern->user)->name ?? 'Unknown' }}
+                            </span>
+
+                            <span class="text-gray-600 font-semibold">
+                                {{ $intern->al_balance }} / {{ $intern->intern_duration }}
+                            </span>
+                        </div>
+                        <hr class="border-gray-200">
+                    @empty
+                        <p class="text-gray-500 text-sm text-center">
+                            No intern data available
+                        </p>
+                    @endforelse
+                </div>
+
+            </div>
         </div>
 
         <!-- Leave Table -->
