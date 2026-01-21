@@ -6,6 +6,20 @@
         <form action="{{ route('supervisor.leave.store') }}" method="POST" class="bg-white shadow p-6 rounded-xl space-y-4">
             @csrf
 
+            @php
+                $message = session('success') ?? session('warning');
+                $bgColor = session('success') ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+            @endphp
+
+            @if($message)
+                <div x-data="{ show: true }" x-show="show" x-transition class="fixed top-5 inset-x-0 flex justify-center z-50">
+                    <div class="{{ $bgColor }} text-white px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                        <span>{{ $message }}</span>
+                        <button type="button" @click="show = false" class="ml-auto text-white font-bold px-2 py-1 rounded">&times;</button>
+                    </div>
+                </div>
+            @endif
+
             <!-- Date -->
             <div>
                 <label class="block text-gray-700 font-medium">Date</label>
