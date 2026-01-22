@@ -79,6 +79,7 @@
                         <th class="px-6 py-3">Leave</th>
                         <!-- <th class="px-6 py-3">Half Day</th> -->
                         <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3">Reason</th>
                         <th class="px-6 py-3 text-center">Action</th>
                         <th class="px-6 py-3 text-center"></th>
                     </tr>
@@ -129,6 +130,10 @@
                                     </span>
                                 @endif
                             </td>
+                            
+                            <td class="px-6 py-4 font-medium text-gray-900">
+                                {{  $leave->reason ?? '-' }}
+                            </td>
 
                             <!-- Actions -->
                             <td class="px-6 py-4 text-center">
@@ -154,8 +159,11 @@
                                     <span class="text-gray-400 italic text-xs">Completed</span>
                                 @endif
                             </td>
+                            @php
+                                $canDelete = $leave->status === 'approved' && (\Carbon\Carbon::parse($leave->leave_date)->isToday() || \Carbon\Carbon::parse($leave->leave_date)->isFuture());
+                            @endphp
                             <td class="px-6 py-4 text-center">
-                                @if($leave->status === 'approved' )
+                               @if($canDelete)
                                     <form action="{{ route('supervisor.leave.destroy', $leave) }}"
                                         method="POST"
                                         onsubmit="return confirm('Are you sure you want to delete this leave record?');">
