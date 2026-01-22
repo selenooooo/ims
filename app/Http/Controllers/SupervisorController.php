@@ -170,13 +170,14 @@ class SupervisorController extends Controller
             ->get();
 
         // Today leave list
-        $todayLeaves = Attendance::with([        
+        $todayLeaves = Attendance::with([
             'user',
-            'leave.leaveType'
+            'approvedLeave.leaveType'
         ])
         ->whereDate('attendance_date', today())
         ->whereNotNull('leave_id')
         ->get();
+
 
         return view('supervisor.dashboard', compact('todayAttendances','todayLeaves'));
     }
