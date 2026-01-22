@@ -34,6 +34,39 @@ class LeaveController extends Controller
 
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
         $intern = auth()->user()->intern;
+        $leave_date = $request->leave_date;
+        $half_day   = $request->half_day;
+
+
+        // check existing leave
+        $existingLeaves = InternLeave::where('user_id', auth()->id())
+            ->where('leave_date', $leave_date)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+        foreach ($existingLeaves as $leave) {
+            if ($leave->half_day === 'full') {
+                return back()->with('warning', "Leave already applied for full day on {$leave_date}.");
+            }
+
+            if ($half_day === 'full') {
+                return back()->with('warning', "Cannot apply full day leave because {$leave->half_day} leave already exists on {$leave_date}.");
+            }
+
+            if ($leave->half_day === $half_day) {
+                return back()->with('warning', "Leave already applied for {$half_day} on {$leave_date}.");
+            }
+        }
+
+        // check attendance 
+        $attendanceExists = $intern->attendances()
+            ->where('attendance_date', $leave_date)
+            ->whereNotNull('check_in')
+            ->exists();
+
+        if ($attendanceExists) {
+            return back()->with('warning', "Cannot apply leave. Attendance already recorded for {$leave_date}.");
+        }
 
         $leave_days = $request->half_day === 'full' ? 1.0 : 0.5;
 

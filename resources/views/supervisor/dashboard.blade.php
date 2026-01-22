@@ -173,7 +173,7 @@
                                         {{ \Carbon\Carbon::parse($leave->attendance_date)->format('d M Y') }}
                                     </td> -->
                                     <td class="px-6 py-3 text-gray-600">
-                                        {{ $leave->leave->leaveType->name ?? '—' }}
+                                        {{ $leave->approvedLeave->leaveType->name ?? '—' }}
                                     </td>
                                 </tr>
                             @endforeach
