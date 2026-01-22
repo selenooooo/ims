@@ -21,11 +21,16 @@ class Attendance extends Model
 
     public function leave()
     {
-        return $this->belongsTo(InternLeave::class, 'leave_id');
+        return $this->belongsTo(InternLeave::class,'leave_id', 'id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function approvedLeave()
+    {
+        return $this->belongsTo(InternLeave::class,'leave_id','id')->where('status', 'approved');
     }
 }

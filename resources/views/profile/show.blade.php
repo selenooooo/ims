@@ -10,14 +10,36 @@
         <div class="bg-white shadow-sm rounded-lg p-6 space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex flex-col">
-                    <span class="text-gray-500 font-medium text-sm">Full Name</span>
+                    <span class="text-gray-500 font-medium text-sm">Name</span>
                     <span class="text-gray-900 font-semibold">{{ auth()->user()->name }}</span>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-gray-500 font-medium text-sm">Email Address</span>
+                    <span class="text-gray-500 font-medium text-sm">Email B2BE</span>
                     <span class="text-gray-900 font-semibold">{{ auth()->user()->email }}</span>
                 </div>
             </div>
+
+            <!-- Extra info for interns -->
+            @if(auth()->user()->role === 'intern' && $intern)
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="flex flex-col">
+                            <span class="text-gray-500 font-medium text-sm">Employee ID</span>
+                            <span class="text-gray-900 font-semibold">{{ $intern->employee_id }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-gray-500 font-medium text-sm">Report Date</span>
+                            <span class="text-gray-900 font-semibold">{{ $intern->report_date }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-gray-500 font-medium text-sm">Duration</span>
+                            <span class="text-gray-900 font-semibold">{{ $intern->intern_duration }} month(s) </span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-gray-500 font-medium text-sm">End Date</span>
+                            <span class="text-gray-900 font-semibold">{{ $intern->end_date }} </span>
+                        </div>
+                    </div>
+            @endif
         </div>
 
         <!-- Change Password Section -->
