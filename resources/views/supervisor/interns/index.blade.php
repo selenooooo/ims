@@ -412,7 +412,7 @@
 
         <!-- Edit Intern Modal -->
         <div id="editInternModal"
-            class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+            class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden z-50">
 
             <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
                 <!-- Header -->
