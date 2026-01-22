@@ -255,32 +255,70 @@ class LeaveController extends Controller
             &$appliedCount
         ) {
             $intern = $user->intern;
+            $leave_date = $request->leave_date;
+            $half_day   = $request->half_day;
 
-            // AL not enough → skip
-            if ($leaveType->code === 'AL' && $intern->al_balance < $leave_days) {
-                $skippedInterns[] = $user->name;
+            // Check existing leaves
+            $existingLeaves = InternLeave::where('user_id', $user->id)
+            ->where('leave_date', $leave_date)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+            foreach ($existingLeaves as $leave) {
+                if ($leave->half_day === 'full') {
+                    $skippedInterns[] = "{$user->name} (full-day leave already exists)";
+                    return;
+                }
+
+                if ($half_day === 'full') {
+                    $skippedInterns[] = "{$user->name} (cannot apply, {$leave->half_day} leave exists)";
+                    return;
+                }
+
+                if ($leave->half_day === $half_day) {
+                    $skippedInterns[] = "{$user->name} (leave already applied for {$half_day})";
+                    return;
+                }
+            }
+
+            //  Check if attendance already recorded
+            $attendanceExists = $intern->attendances()
+                ->where('attendance_date', $leave_date)
+                ->whereNotNull('check_in')
+                ->exists();
+
+            if ($attendanceExists) {
+                $skippedInterns[] = "{$user->name} (attendance already recorded)";
                 return;
             }
+
+            //  Check AL balance
+            if ($leaveType->code === 'AL' && $intern->al_balance < $leave_days) {
+                $skippedInterns[] = "{$user->name} (insufficient AL)";
+                return;
+            }
+
+            // Create leave
+            $leave = InternLeave::create([
+                'user_id' => $user->id,
+                'leave_type_id' => $request->leave_type_id,
+                'leave_date' => $leave_date,
+                'half_day' => $half_day,
+                'leave_days' => $leave_days,
+                'reason' => $request->reason,
+                'status' => 'approved',
+            ]);
 
             // Deduct AL
             if ($leaveType->code === 'AL') {
                 $intern->decrement('al_balance', $leave_days);
             }
 
-            $leave = InternLeave::create([
-                'user_id' => $user->id,
-                'leave_type_id' => $request->leave_type_id,
-                'leave_date' => $request->leave_date,
-                'half_day' => $request->half_day,
-                'leave_days' => $leave_days,
-                'reason' => $request->reason,
-                'status' => 'approved',
-            ]);
-
+            // Update attendance
             Attendance::updateOrCreate(
                 [
                     'user_id' => $user->id,
-                    'attendance_date' => $request->leave_date
+                    'attendance_date' => $leave_date
                 ],
                 [
                     'leave_id' => $leave->id,
@@ -306,7 +344,7 @@ class LeaveController extends Controller
         }
 
         if (!empty($skippedInterns)) {
-            session()->flash('warning', "Failed due to insufficient AL: " . implode(', ', $skippedInterns) . ".");
+            session()->flash('warning', "Skipped: " . implode(', ', $skippedInterns) . ".");
         }
 
         return redirect()->route('supervisor.leave.index');
@@ -321,10 +359,6 @@ class LeaveController extends Controller
             return back()->with('error', 'Only approved leave can be removed.');
         }
 
-        if (\Carbon\Carbon::parse($leave->leave_date)->isPast()) {
-            return back()->with('error', 'Past leave cannot be removed.');
-        }
-
         // Restore AL balance
         if ($leave->leaveType->code === 'AL') {
             $intern = $leave->user->intern;
@@ -335,9 +369,7 @@ class LeaveController extends Controller
         }
 
         // Remove attendance if exists
-        if ($leave->attendance) {
-            $leave->attendance->delete();
-        }
+        $leave->attendance?->delete();
 
         $leave->delete();
 
