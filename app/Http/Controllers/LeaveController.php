@@ -7,6 +7,7 @@ use App\Models\InternLeave;
 use App\Models\LeaveType;
 use App\Models\Attendance;
 use App\Models\User;
+use App\Models\Intern;
 
 class LeaveController extends Controller
 {
@@ -164,7 +165,11 @@ class LeaveController extends Controller
 
         $leaves = $query->orderBy('leave_date', 'desc')->get();
 
-        return view('supervisor.leave.index', compact('leaves'));
+        $internALBalances = Intern::with('user')->get();
+
+        return view(
+            'supervisor.leave.index', compact('leaves', 'internALBalances')
+        );
     }
 
     public function approve(InternLeave $leave)
@@ -301,10 +306,10 @@ class LeaveController extends Controller
         }
 
         if (!empty($skippedInterns)) {
-            session()->flash('warning', "Skipped due to insufficient AL: " . implode(', ', $skippedInterns) . ".");
+            session()->flash('warning', "Failed due to insufficient AL: " . implode(', ', $skippedInterns) . ".");
         }
 
-        return redirect()->route('supervisor.leave.create');
+        return redirect()->route('supervisor.leave.index');
     }
 
     public function destroyBySupervisor(InternLeave $leave)
@@ -338,6 +343,4 @@ class LeaveController extends Controller
 
         return back()->with('success', 'Leave removed and balance restored.');
     }
-  
-
 }
