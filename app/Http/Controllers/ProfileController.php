@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Intern;
 
 class ProfileController extends Controller
 {
@@ -12,7 +13,14 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user();
-        return view('profile.show', compact('user'));
+        $intern = null;
+
+        // Only fetch intern data if user is intern
+        if ($user->role === 'intern') {
+            $intern = Intern::where('user_id', $user->id)->first();
+        }
+
+        return view('profile.show', compact('user', 'intern'));
     }
 
     // Change password

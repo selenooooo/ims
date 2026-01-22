@@ -21,4 +21,9 @@ class Intern extends Model
     {
         return $this->end_date >= now() ? 'active' : 'completed';
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'user_id', 'id');
+    }
 }
