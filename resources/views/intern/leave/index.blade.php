@@ -79,10 +79,16 @@
                             </td>
                             <td class="px-6 py-4">{{ $leave->reason ?? '-' }}</td>
                             <td class="px-6 py-4 text-xs">{{ $leave->created_at }}</td>
+
+                            @php
+                                $canCancel = $leave->leaveType->code !== 'IOD'
+                                    && $leave->status !== 'rejected'
+                                    && (\Carbon\Carbon::parse($leave->leave_date)->isToday() || \Carbon\Carbon::parse($leave->leave_date)->isFuture());
+                            @endphp
                             
                             <!-- Action Column -->
                             <td class="px-6 py-4 text-center">
-                                @if($leave->leaveType->code !== 'IOD' && $leave->status !== 'rejected')
+                                  @if($canCancel)
                                     <form action="{{ route('intern.leave.destroy', $leave) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this leave?');">
                                         @csrf
                                         @method('DELETE')
