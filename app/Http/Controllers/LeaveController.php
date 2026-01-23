@@ -159,6 +159,20 @@ class LeaveController extends Controller
 
         $query = InternLeave::with(['user', 'leaveType']);
 
+        // Optional filters
+        if ($request->filled('intern_id') && $request->intern_id !== 'all') {
+            $query->where('user_id', $request->intern_id);
+        }
+
+        if ($request->filled('leave_type_id') && $request->leave_type_id !== 'all') {
+            $query->where('leave_type_id', $request->leave_type_id);
+        }
+
+        if ($request->filled('leave_date')) {
+            $query->where('leave_date', $request->leave_date);
+        }
+
+        // Optional status filter (if needed)
         if ($request->filled('filter') && in_array($request->filter, ['pending', 'approved', 'rejected'])) {
             $query->where('status', $request->filter);
         }
@@ -167,8 +181,12 @@ class LeaveController extends Controller
 
         $internALBalances = Intern::with('user')->get();
 
+        $interns = User::where('role', 'intern')->get();
+        $leaveTypes = LeaveType::all();
+
         return view(
-            'supervisor.leave.index', compact('leaves', 'internALBalances')
+            'supervisor.leave.index',
+            compact('leaves', 'internALBalances', 'interns', 'leaveTypes')
         );
     }
 
