@@ -32,42 +32,96 @@
 
         </div>
 
+        <div class="flex flex-col md:flex-row gap-6 mb-3">
         <!-- Annual Leave Balance -->
-        <div class="w-full md:w-1/4">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-
-                <!-- Header -->
+        <div class="w-full md:w-1/3">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 h-full flex flex-col">
                 <div class="flex items-center gap-2 text-sm mb-4">
                     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                         Annual Leave Balance
                     </h2>
-                    <span class="text-xs text-green-500">
-                        (Active interns)
-                    </span>
+                    <span class="text-xs text-green-500">(Active interns)</span>
                 </div>
 
-                <!-- AL Balance List -->
-                <div class="space-y-2">
+                <div class="space-y-2 flex-1 overflow-y-auto">
                     @forelse($internALBalances as $intern)
                         <div class="flex justify-between text-sm">
-                            <span class="font-medium text-gray-800">
-                                {{ optional($intern->user)->name ?? 'Unknown' }}
-                            </span>
-
-                            <span class="text-gray-600 font-semibold">
-                                {{ $intern->al_balance }} / {{ $intern->intern_duration }}
-                            </span>
+                            <span class="font-medium text-gray-800">{{ optional($intern->user)->name ?? 'Unknown' }}</span>
+                            <span class="text-gray-600 font-semibold">{{ $intern->al_balance }} / {{ $intern->intern_duration }}</span>
                         </div>
                         <hr class="border-gray-200">
                     @empty
-                        <p class="text-gray-500 text-sm text-center">
-                            No intern data available
-                        </p>
+                        <p class="text-gray-500 text-sm text-center">No intern data available</p>
                     @endforelse
                 </div>
-
             </div>
         </div>
+
+        <!-- Filters -->
+        <div class="w-full md:w-1/3">
+            <form method="GET" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-3">
+                <!-- Intern -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Intern</label>
+                    <select name="intern_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-400">
+                        <option value="all">All Interns</option>
+                        @foreach($interns as $intern)
+                            <option value="{{ $intern->id }}" {{ request('intern_id') == $intern->id ? 'selected' : '' }}>
+                                {{ $intern->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Leave Type -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Leave Type</label>
+                    <select name="leave_type_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-400">
+                        <option value="all">All Types</option>
+                        @foreach($leaveTypes as $type)
+                            <option value="{{ $type->id }}" {{ request('leave_type_id') == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Leave Date + Buttons -->
+                <div class="flex items-end gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Leave Date</label>
+                        <input type="date" name="leave_date" value="{{ request('leave_date') }}" 
+                            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-400">
+                    </div>
+
+                    <div class="flex gap-2 self-end">
+                        <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-500 text-xs font-semibold transition">Filter</button>
+                        <a href="{{ route('supervisor.leave.index') }}" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs font-semibold transition">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Rows per page selector -->
+        <div class="w-full md:w-1/3 flex justify-end items-end">
+            <form method="GET" id="rowsForm" class="flex gap-2 items-center">
+                <!-- Keep current filters in hidden inputs -->
+                <input type="hidden" name="intern_id" value="{{ request('intern_id') }}">
+                <input type="hidden" name="leave_type_id" value="{{ request('leave_type_id') }}">
+                <input type="hidden" name="leave_date" value="{{ request('leave_date') }}">
+                
+                <select name="perPage" id="rowsPerPage" 
+                        class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-400"
+                        onchange="document.getElementById('rowsForm').submit()">
+                    <option value="10" {{ request('perPage', 10) == 10 ? 'selected' : '' }}>10</option>
+                    <option value="30" {{ request('perPage') == 30 ? 'selected' : '' }}>30</option>
+                    <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50</option>
+                </select>
+                <span class="text-sm text-gray-700">entries</span>
+            </form>
+        </div>
+    </div>
+
 
         <!-- Leave Table -->
         <div class="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -101,7 +155,7 @@
                             <!-- Leave Type -->
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">
-                                    {{ $leave->leaveType->name }}
+                                    {{ $leave->leaveType->name }} ( {{ $leave->half_day }} )
                                 </span>
                             </td>
 
