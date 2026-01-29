@@ -103,7 +103,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/leave-type', [LeaveTypeController::class, 'index'])->name('leave.leaveType');
         Route::post('/leave-type', [LeaveTypeController::class, 'store'])->name('leaveType.store');
         Route::put('/leave-type/{leaveType}', [LeaveTypeController::class, 'update'])->name('leaveType.update');
-        Route::delete('/leave-type/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('leaveType.destroy');
+        Route::put('/leave-type', [LeaveTypeController::class, 'bulkUpdate'])->name('leaveType.bulkUpdate');
+        Route::get('/leave-type/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('leaveType.destroy');
         
 
     });

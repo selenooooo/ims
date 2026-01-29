@@ -84,6 +84,7 @@ class LeaveController extends Controller
         InternLeave::create([
             'user_id' => auth()->id(),
             'leave_type_id' => $request->leave_type_id,
+            'leave_type_snap' => $leaveType->code . ' - ' . $leaveType->name,
             'leave_date' => $request->leave_date,
             'half_day' => $request->half_day,
             'leave_days' => $leave_days,
@@ -302,6 +303,7 @@ class LeaveController extends Controller
             $leave = InternLeave::create([
                 'user_id' => $user->id,
                 'leave_type_id' => $request->leave_type_id,
+                'leave_type_snap' => $leaveType->code . ' - ' . $leaveType->name,
                 'leave_date' => $leave_date,
                 'half_day' => $half_day,
                 'leave_days' => $leave_days,

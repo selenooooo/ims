@@ -7,19 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeaveType extends Model
 {
-    use HasFactory;
+    protected $fillable = ['code', 'name', 'affects_al_balance', 'intern_allowed_apply',];
 
-    protected $fillable = [
-        'code',
-        'name',
-        'description',
+    protected $casts = [
+        'affects_al_balance' => 'boolean',
+        'intern_allowed_apply' => 'boolean',
     ];
 
-    /**
-     * Scope to exclude leave types that should not appear in dropdowns.
-     */
-    public function scopeSelectable($query)
+    public function internLeaves()
     {
-        return $query->where('code', '<>', 'IOD'); // exclude Intern Off Day
+        return $this->hasMany(InternLeave::class, 'leave_type_id');
     }
+
 }
