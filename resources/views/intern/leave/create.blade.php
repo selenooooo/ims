@@ -36,7 +36,7 @@
                     hover:border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors duration-200" required>
                     
                     @foreach($leaveTypes as $type)
-                        @if($type->intern_allowed_apply === 1) 
+                        @if($type->intern_allowed_apply) 
                             <option value="{{ $type->id }}">{{ $type->name }}</option>
                         @endif
                     @endforeach
