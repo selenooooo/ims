@@ -48,7 +48,7 @@
                         <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-purple-600">Old Interns</p>
+                        <p class="text-sm font-medium text-purple-600">Past Interns</p>
                         <p class="text-2xl font-bold text-purple-900 mt-1">{{ $oldInterns ?? 0 }}</p>
                     </div>
                 </div>
