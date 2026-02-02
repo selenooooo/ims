@@ -72,7 +72,7 @@ class LeaveController extends Controller
         $leave_days = $request->half_day === 'full' ? 1.0 : 0.5;
 
         // SINGLE SOURCE OF TRUTH
-        if ($leaveType->code === 'AL') {
+        if ($leaveType->affects_al_balance === 1 ) {
 
             if ($intern->al_balance < $leave_days) {
                 return back()->with('warning', 
@@ -84,6 +84,7 @@ class LeaveController extends Controller
         InternLeave::create([
             'user_id' => auth()->id(),
             'leave_type_id' => $request->leave_type_id,
+            'leave_type_snap' => $leaveType->code . ' - ' . $leaveType->name,
             'leave_date' => $request->leave_date,
             'half_day' => $request->half_day,
             'leave_days' => $leave_days,
@@ -92,7 +93,7 @@ class LeaveController extends Controller
         ]);
 
         // Safe deduction
-        if ($leaveType->code === 'AL') {
+        if ($leaveType->affects_al_balance === 1) {
             $intern->decrement('al_balance', $leave_days);
         }
 
@@ -132,10 +133,10 @@ class LeaveController extends Controller
     public function destroy(InternLeave $leave)
     {
         abort_if(auth()->user()->role !== 'intern', 403);
-        abort_if($leave->leaveType->code === 'IOD', 403); // Cannot delete IOD leave
+        // abort_if($leave->leaveType->code === 'IOD', 403); // Cannot delete IOD leave
 
         // If AL, restore AL balance
-        if ($leave->leaveType->code === 'AL') {
+        if ($leave->leaveType->affects_al_balance === 1) {
             $intern = auth()->user()->intern;
             $restore = $leave->leave_days ?? ($leave->half_day === 'full' ? 1.0 : 0.5);
             $intern->increment('al_balance', $restore);
@@ -227,7 +228,7 @@ class LeaveController extends Controller
         }
 
         // Restore AL balance if Annual Leave
-        if ($leave->leaveType->code === 'AL') {
+        if ($leave->leaveType->affects_al_balance === 1) {
             $intern = $leave->user->intern;
             $intern->increment('al_balance', $leave->leave_days);
         }
@@ -311,7 +312,7 @@ class LeaveController extends Controller
             }
 
             //  Check AL balance
-            if ($leaveType->code === 'AL' && $intern->al_balance < $leave_days) {
+            if ($leaveType->affects_al_balance === 1 && $intern->al_balance < $leave_days) {
                 $skippedInterns[] = "{$user->name} (insufficient AL)";
                 return;
             }
@@ -320,6 +321,7 @@ class LeaveController extends Controller
             $leave = InternLeave::create([
                 'user_id' => $user->id,
                 'leave_type_id' => $request->leave_type_id,
+                'leave_type_snap' => $leaveType->code . ' - ' . $leaveType->name,
                 'leave_date' => $leave_date,
                 'half_day' => $half_day,
                 'leave_days' => $leave_days,
@@ -328,7 +330,7 @@ class LeaveController extends Controller
             ]);
 
             // Deduct AL
-            if ($leaveType->code === 'AL') {
+            if ($leaveType->affects_al_balance === 1) {
                 $intern->decrement('al_balance', $leave_days);
             }
 
@@ -378,7 +380,7 @@ class LeaveController extends Controller
         }
 
         // Restore AL balance
-        if ($leave->leaveType->code === 'AL') {
+        if ($leave->leaveType->affects_al_balance === 1) {
             $intern = $leave->user->intern;
 
             if ($intern) {

@@ -10,6 +10,7 @@ class InternLeave extends Model
     protected $fillable = [
         'user_id',
         'leave_type_id',
+        'leave_type_snap',
         'leave_date',
         'half_day',
         'leave_days',
