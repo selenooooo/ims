@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/attendance', [SupervisorController::class, 'attendance'])->name('attendance.index');
         // Route::get('attendance/update',[SupervisorController::class, 'updateAttendance'])->name('attendance.update');
         Route::patch('/attendance/{attendance}/update', [SupervisorController::class, 'updateAttendance'])->name('attendance.update');
+        Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 
         // Supervisor Profile
         Route::get('/profile', [SupervisorController::class, 'profile'])->name('profile');

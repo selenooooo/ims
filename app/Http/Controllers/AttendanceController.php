@@ -146,4 +146,12 @@ class AttendanceController extends Controller
         ));
     }
 
+    public function destroy(Attendance $attendance)
+    {
+        $attendance->delete();
+
+        return back()->with('success', 'Attendance record deleted successfully.');
+    }
+
+
 }

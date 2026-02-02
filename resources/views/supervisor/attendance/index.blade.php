@@ -1,3 +1,8 @@
+<form id="deleteForm" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 <x-app-layout>
     <div class="max-w-full mx-auto px-4 space-y-6">
 
@@ -169,6 +174,9 @@
                                         <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">
                                             Save
                                         </button>
+                                        <button type="button" onclick="deleteAttendance({{ $attendance->id }})" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 ml-1">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
                                         <button type="button" class="bg-gray-300 px-2 py-1 rounded text-xs hover:bg-gray-400"
                                                 onclick="cancelRowEdit({{ $attendance->id }})">
                                             Cancel
@@ -261,6 +269,16 @@
             // Copy input values to hidden form fields
             document.getElementById(`form_checkin_${id}`).value = document.getElementById(`checkin_input_${id}`).value;
             document.getElementById(`form_checkout_${id}`).value = document.getElementById(`checkout_input_${id}`).value;
+        }
+
+        function deleteAttendance(id) {
+            if (!confirm('Are you sure you want to delete this attendance record?')) {
+                return;
+            }
+
+            const form = document.getElementById('deleteForm');
+            form.action = `/supervisor/attendance/${id}`; 
+            form.submit();
         }
     </script>
 </x-app-layout>
