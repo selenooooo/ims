@@ -4,11 +4,13 @@
             <!-- Add Leave Type -->
             <form method="POST" action="{{ route('supervisor.leaveType.store') }}" class="bg-white p-6 rounded shadow flex gap-4 items-end">
                 @csrf
-                <input type="text" name="code" placeholder="Code" required class="border px-2 py-1 rounded w-32">
-                <input type="text" name="name" placeholder="Name" required class="border px-2 py-1 rounded flex-1">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
-            </form>
-
+                <input type="text" name="code" placeholder="Code" class="border px-2 py-1 rounded w-32" required>
+                <input type="text" name="name" placeholder="Name" class="border px-2 py-1 rounded flex-1" required>
+                <button type="submit" onclick="disableSubmit(this)" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+        </form>
+        
         <!-- Bulk Update Table -->
         <form method="POST" action="{{ route('supervisor.leaveType.bulkUpdate') }}">
             @csrf
@@ -66,3 +68,13 @@
         </form>
     </div>
 </x-app-layout>
+
+<script>
+    function disableSubmit(button) {
+        button.disabled = true;
+        button.innerText = "Submitting...";
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        button.classList.add('bg-gray-400', 'cursor-not-allowed');
+        button.form.submit();
+    }
+</script>
