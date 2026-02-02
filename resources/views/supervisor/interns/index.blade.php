@@ -180,7 +180,7 @@
                                     <div class="flex items-center space-x-4">
                                         <a href="javascript:void(0)"
                                             class="text-blue-600 hover:text-blue-900 transition-colors group view-intern-btn"
-                                            data-id="{{ $intern->employee_id }}"
+                                            data-id="{{ $intern->id }}"
                                             data-name="{{ $intern->name }}"
                                             data-report="{{ $intern->intern ? $intern->intern->report_date : '' }}"
                                             data-duration="{{ $intern->intern ? $intern->intern->intern_duration : '' }}"
@@ -287,6 +287,7 @@
             document.getElementById('modalEndDate').value = data.end ?? '';
 
             document.getElementById('editInternForm').action = `/supervisor/interns/${data.id}`;
+            document.getElementById('deleteInternForm').action = `/supervisor/interns/${data.id}`;
 
             document.getElementById('internTab').classList.remove('translate-x-full');
         }
@@ -398,12 +399,10 @@
                     <i class="fas fa-edit mr-2"></i>Edit
                 </button>
 
-                <form id="deleteInternForm" method="POST" action="{{ route('supervisor.interns.destroy', $intern->id) }}" class="flex-1">
+                <form id="deleteInternForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
-                    <button type="button"
-                        onclick="confirmDelete()"
-                        class="flex-1 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                    <button type="button" onclick="confirmDelete()" class="flex-1 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
                         <i class="fas fa-trash mr-2"></i>Delete
                     </button>
                 </form>
@@ -424,7 +423,7 @@
                 </div>
 
                 <!-- Form -->
-                <form id="editInternForm" method="POST" action="{{ route('supervisor.interns.update', $intern->employee_id) }}" class="p-6 space-y-4">
+                <form id="editInternForm" method="POST" action="" class="p-6 space-y-4">
                     @csrf
                     @method('PUT')
 

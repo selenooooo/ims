@@ -57,7 +57,7 @@
 
             <!-- Submit -->
             <div class="flex justify-end">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                <button type="submit" onclick="disableSubmit(this)" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Add Leave
                 </button>
             </div>
@@ -65,3 +65,14 @@
         </form>
     </div>
 </x-app-layout>
+
+<script>
+    function disableSubmit(button) {
+        button.disabled = true;
+        button.innerText = "Submitting...";
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        button.classList.add('bg-gray-400', 'cursor-not-allowed');
+        button.form.submit();
+    }
+</script>
+
