@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/attendance', [SupervisorController::class, 'attendance'])->name('attendance.index');
         // Route::get('attendance/update',[SupervisorController::class, 'updateAttendance'])->name('attendance.update');
         Route::patch('/attendance/{attendance}/update', [SupervisorController::class, 'updateAttendance'])->name('attendance.update');
+        Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 
         // Supervisor Profile
         Route::get('/profile', [SupervisorController::class, 'profile'])->name('profile');
@@ -103,7 +104,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/leave-type', [LeaveTypeController::class, 'index'])->name('leave.leaveType');
         Route::post('/leave-type', [LeaveTypeController::class, 'store'])->name('leaveType.store');
         Route::put('/leave-type/{leaveType}', [LeaveTypeController::class, 'update'])->name('leaveType.update');
-        Route::delete('/leave-type/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('leaveType.destroy');
+        Route::put('/leave-type', [LeaveTypeController::class, 'bulkUpdate'])->name('leaveType.bulkUpdate');
+        Route::get('/leave-type/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('leaveType.destroy');
         
 
     });

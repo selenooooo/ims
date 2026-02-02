@@ -21,7 +21,7 @@ class LeaveTypeController extends Controller
         abort_if(auth()->user()->role !== 'supervisor', 403);
 
         $request->validate([
-            'code' => 'required|string|max:10|unique:leave_types,code,' . $leaveType->id,
+            'code' => 'required|string|max:10|unique:leave_types,code',
             'name' => 'required|string|max:255',
         ]);
 
@@ -48,13 +48,27 @@ class LeaveTypeController extends Controller
     {
         abort_if(auth()->user()->role !== 'supervisor', 403);
 
-        // Optional: prevent deletion of IOD
-        if ($leaveType->code === 'IOD') {
-            return back()->with('error', 'Intern Off Day cannot be deleted.');
+        if ($leaveType->internLeaves()->count() > 0) {
+            return back()->with('error', 'Cannot delete leave type. It is used in existing leave records.');
         }
 
         $leaveType->delete();
 
         return back()->with('success', 'Leave type deleted successfully.');
     }
+
+    public function bulkUpdate(Request $request)
+    {
+        foreach ($request->leaveTypes as $id => $data) {
+            LeaveType::where('id', $id)->update([
+                'code' => $data['code'],
+                'name' => $data['name'],
+                'intern_allowed_apply' => $data['intern_allowed_apply'] ?? 0,
+                'affects_al_balance' => $data['affects_al_balance'] ?? 0,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Leave types updated successfully.');
+    }
+
 }

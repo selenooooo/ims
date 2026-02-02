@@ -80,11 +80,11 @@
                             <td class="px-6 py-4">{{ $leave->reason ?? '-' }}</td>
                             <td class="px-6 py-4 text-xs">{{ $leave->created_at }}</td>
 
-                            @php
+                            <!-- @php
                                 $canCancel = $leave->leaveType->code !== 'IOD'
                                     && $leave->status !== 'rejected'
                                     && (\Carbon\Carbon::parse($leave->leave_date)->isToday() || \Carbon\Carbon::parse($leave->leave_date)->isFuture());
-                            @endphp
+                            @endphp -->
                             
                             <!-- Action Column -->
                             <td class="px-6 py-4 text-center">

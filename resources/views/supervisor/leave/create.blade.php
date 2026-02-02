@@ -9,8 +9,7 @@
             <!-- Date -->
             <div>
                 <label class="block text-gray-700 font-medium">Date</label>
-                <input type="date" name="leave_date" class="w-full border border-gray-300 rounded-md px-3 py-2 
-                    hover:border-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors duration-200" required>
+                <input type="text" name="leave_date" id="leave_date" class="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Pick a Date" required>
             </div>
 
             <!-- Intern Dropdown -->
@@ -74,5 +73,13 @@
         button.classList.add('bg-gray-400', 'cursor-not-allowed');
         button.form.submit();
     }
-</script>
 
+    flatpickr("#leave_date", {
+        dateFormat: "Y-m-d",
+        disable: [
+            function(date) {
+                return (date.getDay() === 0 || date.getDay() === 6);
+            }
+        ]
+    });
+</script>

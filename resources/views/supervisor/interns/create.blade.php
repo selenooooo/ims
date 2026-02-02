@@ -96,7 +96,7 @@
                                            appearance-none cursor-pointer" required>
                                 <option value="" disabled selected>Select duration</option>
                                 @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'month' : 'months' }}</option>
+                                    <option value="{{ $i }}">{{ $i }} {{ $i   ? 'month' : 'months' }}</option>
                                 @endfor
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
