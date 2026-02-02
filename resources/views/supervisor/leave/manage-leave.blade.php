@@ -9,6 +9,11 @@
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
             </form>
 
+            <button type="submit" onclick="disableSubmit(this)" class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition flex items-center gap-2">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </form>
+        
         <!-- Bulk Update Table -->
         <form method="POST" action="{{ route('supervisor.leaveType.bulkUpdate') }}">
             @csrf
@@ -66,3 +71,13 @@
         </form>
     </div>
 </x-app-layout>
+
+<script>
+    function disableSubmit(button) {
+        button.disabled = true;
+        button.innerText = "Submitting...";
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        button.classList.add('bg-gray-400', 'cursor-not-allowed');
+        button.form.submit();
+    }
+</script>
