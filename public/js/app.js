@@ -5839,7 +5839,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
         iteratees = arrayMap(iteratees, function(iteratee) {
           if (isArray(iteratee)) {
             return function(value) {
-              return baseGet(value, iteratee.length === 1 ? iteratee[0] : iteratee);
+              return baseGet(value, iteratee.length   ? iteratee[0] : iteratee);
             }
           }
           return iteratee;
@@ -13582,7 +13582,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
      * // => false
      */
     function isElement(value) {
-      return isObjectLike(value) && value.nodeType === 1 && !isPlainObject(value);
+      return isObjectLike(value) && value.nodeType   && !isPlainObject(value);
     }
 
     /**
@@ -19425,7 +19425,7 @@ process.nextTick = function (fun) {
         }
     }
     queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
+    if (queue.length   && !draining) {
         runTimeout(drainQueue);
     }
 };
