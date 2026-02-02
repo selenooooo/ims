@@ -96,7 +96,7 @@
                                            appearance-none cursor-pointer" required>
                                 <option value="" disabled selected>Select duration</option>
                                 @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'month' : 'months' }}</option>
+                                    <option value="{{ $i }}">{{ $i }} {{ $i   ? 'month' : 'months' }}</option>
                                 @endfor
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -174,9 +174,7 @@
                         <i class="fas fa-rotate-left"></i>
                         Reset
                     </button>
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-8 py-3
-                            bg-green-600 text-white font-semibold rounded-md
-                            hover:bg-green-700 transition-colors">
+                    <button type="submit" onclick="disableSubmit(this)" class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors">
                         <i class="fas fa-user-plus"></i>
                         Submit
                     </button>
@@ -224,6 +222,15 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+
+        function disableSubmit(button) {
+            button.disabled = true;
+            button.innerText = "Submitting...";
+            button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            button.classList.add('bg-gray-400', 'cursor-not-allowed');
+            button.form.submit();
+        }
     </script>
     @endpush
+    
 </x-app-layout>

@@ -213,9 +213,9 @@ class SupervisorController extends Controller
         ]);
     }
 
-    public function update(Request $request, $employee_id)
+    public function update(Request $request, $user_id)
     {
-        $intern = Intern::where('employee_id', $employee_id)->firstOrFail();
+        $intern = Intern::where('user_id', $user_id)->firstOrFail();
 
         $intern->update([
             'report_date'     => $request->report_date,
