@@ -153,16 +153,14 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-key text-gray-500"></i>
                             </div>
-                            <input type="password" name="password_confirmation" id="confirm-password"
-                                class="w-full pl-10 pr-12 py-3 border border-gray-400 rounded-md 
-                                        focus:border-blue-500 focus:ring-2 focus:ring-blue-100 
-                                        hover:border-gray-500 transition-colors" 
-                                placeholder="Confirm password" required>
-                            <button type="button" onclick="togglePasswordVisibility('confirm-password', 'confirm-password-eye')"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                            <input type="password" name="password_confirmation" id="confirm-password" class="w-full pl-10 pr-12 py-3 border border-gray-400 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-100 hover:border-gray-500 transition-colors" placeholder="Confirm password" required>
+                            <button type="button" onclick="togglePasswordVisibility('confirm-password', 'confirm-password-eye')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
                                 <i id="confirm-password-eye" class="fas fa-eye"></i>
                             </button>
                         </div>
+                        <p id="password-error" class="text-sm text-red-600 mt-1 hidden">
+                                Passwords do not match.
+                        </p>
                     </div>
                 </div>
 
@@ -223,7 +221,45 @@
             }
         }
 
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const passwordError = document.getElementById('password-error');
+
+        function checkPasswordMatch() {
+            if (confirmPasswordInput.value === '') {
+                passwordError.classList.add('hidden');
+                confirmPasswordInput.classList.remove('border-red-500');
+                return;
+            }
+
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                passwordError.classList.remove('hidden');
+                confirmPasswordInput.classList.add('border-red-500');
+            } else {
+                passwordError.classList.add('hidden');
+                confirmPasswordInput.classList.remove('border-red-500');
+            }
+        }
+
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+
         function disableSubmit(button) {
+            const form = button.form;
+
+            if (!form.checkValidity()) {
+                form.reportValidity(); // show validation errors
+                return;
+            }
+
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                passwordError.classList.remove('hidden');
+                confirmPasswordInput.classList.add('border-red-500');
+                confirmPasswordInput.focus();
+                return;
+            }
+
             button.disabled = true;
             button.innerText = "Submitting...";
             button.classList.remove('bg-blue-600', 'hover:bg-blue-700');

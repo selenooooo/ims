@@ -4,6 +4,21 @@
         <!-- Page Header -->
         <div class="flex items-center justify-between border-b border-gray-200 pb-3">
             <h1 class="text-2xl text-gray-900 uppercase font-semibold">Profile</h1>
+
+            @php
+                $message = session('success') ?? session('warning');
+                $bgColor = session('success') ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+            @endphp
+
+            @if($message)
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition class="fixed top-5 inset-x-0 flex justify-center z-50">
+                    <div class="{{ $bgColor }} text-white px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                        <span>{{ $message }}</span>
+                        <button type="button" @click="show = false" class="ml-auto text-white font-bold px-2 py-1 rounded">&times;</button>
+                    </div>
+                </div>
+            @endif
+
         </div>
 
         <!-- Profile Information -->
@@ -94,8 +109,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">
+                    <button type="submit" onclick="disableSubmit(this)" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium text-sm transition">
                         Update Password
                     </button>
                 </div>
@@ -117,6 +131,21 @@
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
+    }
+
+    function disableSubmit(button) {
+        const form = button.form;
+
+        if (!form.checkValidity()) {
+            form.reportValidity(); // show validation errors
+            return;
+        }
+
+        button.disabled = true;
+        button.innerText = "Updating...";
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        button.classList.add('bg-gray-400', 'cursor-not-allowed');
+        button.form.submit();
     }
     </script>
 </x-app-layout>

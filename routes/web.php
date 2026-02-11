@@ -90,7 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 
         // Supervisor Profile
-        Route::get('/profile', [SupervisorController::class, 'profile'])->name('profile');
+        Route::get('/profile', [ProfileController::class, 'profile'])->name('profile');
 
         // Leave Module
         Route::get('/leave', [LeaveController::class, 'index'])->name('leave.index');

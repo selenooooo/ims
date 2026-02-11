@@ -393,6 +393,6 @@ class LeaveController extends Controller
 
         $leave->delete();
 
-        return back()->with('success', 'Leave removed and balance restored.');
+        return back()->with('success', 'Leave removed successfully.');
     }
 }

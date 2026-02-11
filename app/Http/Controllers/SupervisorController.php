@@ -112,7 +112,8 @@ class SupervisorController extends Controller
             ]);
         });
 
-        return redirect()->route('supervisor.interns.index')
+        return redirect()
+            ->route('supervisor.interns.index')
             ->with('success', 'Intern registered successfully.');
     }
 
@@ -180,20 +181,6 @@ class SupervisorController extends Controller
 
 
         return view('supervisor.dashboard', compact('todayAttendances','todayLeaves'));
-    }
-
-    public function changePassword(Request $request)
-    {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', 'min:6'],
-        ]);
-
-        auth()->user()->update([
-            'password' => Hash::make($request->password)
-        ]);
-
-        return back()->with('success', 'Password updated successfully.');
     }
 
     public function showIntern(User $user)

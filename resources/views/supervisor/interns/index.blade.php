@@ -14,6 +14,21 @@
                     Register New Intern
                 </a>
             </div>
+
+            @php
+                $message = session('success') ?? session('warning');
+                $bgColor = session('success') ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+            @endphp
+
+            @if($message)
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition class="fixed top-5 inset-x-0 flex justify-center z-50">
+                    <div class="{{ $bgColor }} text-white px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                        <span>{{ $message }}</span>
+                        <button type="button" @click="show = false" class="ml-auto text-white font-bold px-2 py-1 rounded">&times;</button>
+                    </div>
+                </div>
+            @endif
+            
         </div>
 
         <!-- Stats Overview -->

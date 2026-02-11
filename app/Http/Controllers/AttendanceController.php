@@ -88,25 +88,12 @@ class AttendanceController extends Controller
         $user = Auth::user();
         $showAll = $request->has('show_all');
 
-        $query = Attendance::where('user_id', $user->id) ->whereDate('attendance_date', '<=', Carbon::today()); // hide future
+        $query = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', '<=', Carbon::today());
 
-        // Apply year filter ONLY if not show all
-        if (!$showAll) {
-            $query->whereYear('attendance_date', $request->year ?? now()->year);
-        }
-
-        // Apply month filter ONLY if not show all
-        if (!$showAll && $request->month) {
-            $query->whereMonth('attendance_date', $request->month);
-        }
-
-        // Status filter
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
-        // Date range filter (still allowed)
+        // If date range is selected → ignore year & month
         if ($request->date_range) {
+
             $dates = explode(' to ', $request->date_range);
             $start = $dates[0];
             $end = $dates[1] ?? $dates[0];
@@ -114,6 +101,20 @@ class AttendanceController extends Controller
             $end = Carbon::parse($end)->min(Carbon::today());
 
             $query->whereBetween('attendance_date', [$start, $end]);
+
+        } else {
+
+            if (!$showAll) {
+                $query->whereYear('attendance_date', $request->year ?? now()->year);
+            }
+
+            if (!$showAll && $request->month) {
+                $query->whereMonth('attendance_date', $request->month);
+            }
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
         }
 
         $attendances = $query
