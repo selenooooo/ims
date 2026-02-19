@@ -88,6 +88,10 @@ Route::middleware('auth')->group(function () {
         // Route::get('attendance/update',[SupervisorController::class, 'updateAttendance'])->name('attendance.update');
         Route::patch('/attendance/{attendance}/update', [SupervisorController::class, 'updateAttendance'])->name('attendance.update');
         Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
+        Route::get('attendance/calendar', [AttendanceController::class, 'calendar'])->name('attendance.calendar');
+
+        Route::get('attendance/calendar/events', [AttendanceController::class, 'calendarEvents'])->name('attendance.calendar.events');
+
 
         // Supervisor Profile
         Route::get('/profile', [SupervisorController::class, 'profile'])->name('profile');

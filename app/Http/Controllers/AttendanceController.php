@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\InternLeave;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -151,6 +152,57 @@ class AttendanceController extends Controller
         $attendance->delete();
 
         return back()->with('success', 'Attendance record deleted successfully.');
+    }
+
+    public function calendar(Request $request)
+    {
+        $interns = User::whereHas('intern')->get(); // adjust if needed
+        return view('supervisor.attendance.calendar', compact('interns'));
+    }
+
+    public function calendarEvents(Request $request)
+    {
+        $interns = User::whereHas('intern')->get();
+
+        $query = Attendance::with('user');
+
+        if ($request->intern_id) {
+            $query->where('user_id', $request->intern_id);
+        }
+
+        // Optional: filter by date if clicked
+        if ($request->date) {
+            $query->where('attendance_date', $request->date);
+        }
+
+        $attendances = $query->orderBy('attendance_date', 'desc')->get();
+
+        // Build calendar events
+        $calendarEvents = Attendance::with('user')->get()->map(function ($attendance) {
+            $color = match($attendance->status) {
+                'present' => '#22c55e',
+                'late' => '#eab308',
+                'half day' => '#f97316',
+                'on leave' => '#3b82f6',
+                default => '#ef4444',
+            };
+
+            $title = $attendance->user->name;
+            if($attendance->status === 'on leave') {
+                $title .= ' (Leave)';
+            } else {
+                $title .= ' - ' . ucfirst($attendance->status);
+            }
+
+            return [
+                'title' => $title,
+                'start' => $attendance->attendance_date,
+                'allDay' => true,
+                'color' => $color,
+            ];
+        });
+
+        return view('supervisor.attendance.index', compact('attendances', 'interns', 'calendarEvents'));
     }
 
 
