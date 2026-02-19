@@ -9,6 +9,9 @@ use App\Models\Attendance;
 use App\Models\User;
 use App\Models\Intern;
 
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class LeaveController extends Controller
 {
     /* INTERN */
@@ -395,4 +398,20 @@ class LeaveController extends Controller
 
         return back()->with('success', 'Leave removed and balance restored.');
     }
+
+    public function generatePdf(InternLeave $leave)
+    {
+        // Ensure leave belongs to current user and is approved
+        if ($leave->user_id !== Auth::id() || $leave->status !== 'approved') {
+            abort(403, 'Unauthorized or leave not approved.');
+        }
+
+        $userName = $leave->user->name ?? 'intern'; // fallback if name missing
+        $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $userName); // replace spaces/special chars
+
+        $pdf = Pdf::loadView('intern.leave.pdf', compact('leave'));
+
+        return $pdf->download("leave-{$safeName}.pdf");
+    }
+
 }

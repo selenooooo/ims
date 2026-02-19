@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\InternLeave;
@@ -151,6 +152,55 @@ class AttendanceController extends Controller
         $attendance->delete();
 
         return back()->with('success', 'Attendance record deleted successfully.');
+    }
+
+    public function generatePdf(Request $request)
+    {
+        $user = Auth::user();
+
+        // Get the intern record for current user
+        $intern = $user->intern; // assuming User hasOne Intern relation
+
+        if (!$intern) {
+            return back()->with('error', 'Intern record not found.');
+        }
+
+        $query = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', '<=', Carbon::today());
+
+        // Apply filters
+        if ($request->year) {
+            $query->whereYear('attendance_date', $request->year);
+        }
+
+        if ($request->month) {
+            $query->whereMonth('attendance_date', $request->month);
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->date_range) {
+            $dates = explode(' to ', $request->date_range);
+            $start = $dates[0];
+            $end = $dates[1] ?? $dates[0];
+            $end = Carbon::parse($end)->min(Carbon::today());
+
+            $query->whereBetween('attendance_date', [$start, $end]);
+        }
+
+        $attendances = $query->orderBy('attendance_date', 'desc')->get();
+
+        $pdf = Pdf::loadView('intern.attendance.pdf', [
+            'attendances' => $attendances,
+            'user' => $user,
+            'report_date' => $intern->report_date,
+            'end_date' => $intern->end_date,
+            'intern_duration' => $intern->intern_duration,
+        ]);
+
+        return $pdf->download('attendance-record.pdf');
     }
 
 
