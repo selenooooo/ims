@@ -71,6 +71,11 @@
                     class="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
                         <i class="fas fa-list mr-1"></i> Show All Attendance
                     </a>
+
+                    <a href="{{ route('attendance.pdf', request()->all()) }}"
+                    class="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                        <i class="fas fa-file-pdf mr-1"></i> Upload PDF
+                    </a>
                 </div>
             </form>
 

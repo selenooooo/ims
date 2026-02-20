@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\InternLeave;
@@ -89,25 +90,12 @@ class AttendanceController extends Controller
         $user = Auth::user();
         $showAll = $request->has('show_all');
 
-        $query = Attendance::where('user_id', $user->id) ->whereDate('attendance_date', '<=', Carbon::today()); // hide future
+        $query = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', '<=', Carbon::today());
 
-        // Apply year filter ONLY if not show all
-        if (!$showAll) {
-            $query->whereYear('attendance_date', $request->year ?? now()->year);
-        }
-
-        // Apply month filter ONLY if not show all
-        if (!$showAll && $request->month) {
-            $query->whereMonth('attendance_date', $request->month);
-        }
-
-        // Status filter
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
-        // Date range filter (still allowed)
+        // If date range is selected → ignore year & month
         if ($request->date_range) {
+
             $dates = explode(' to ', $request->date_range);
             $start = $dates[0];
             $end = $dates[1] ?? $dates[0];
@@ -115,6 +103,20 @@ class AttendanceController extends Controller
             $end = Carbon::parse($end)->min(Carbon::today());
 
             $query->whereBetween('attendance_date', [$start, $end]);
+
+        } else {
+
+            if (!$showAll) {
+                $query->whereYear('attendance_date', $request->year ?? now()->year);
+            }
+
+            if (!$showAll && $request->month) {
+                $query->whereMonth('attendance_date', $request->month);
+            }
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
         }
 
         $attendances = $query
@@ -159,26 +161,40 @@ class AttendanceController extends Controller
         $interns = User::whereHas('intern')->get(); // adjust if needed
         return view('supervisor.attendance.calendar', compact('interns'));
     }
-
+  
     public function calendarEvents(Request $request)
     {
-        $interns = User::whereHas('intern')->get();
+        // Get all active interns
+        // $interns = User::whereHas('intern')->get();
 
+        // Build query for attendance
         $query = Attendance::with('user');
 
+        // Optional filter: specific intern
         if ($request->intern_id) {
             $query->where('user_id', $request->intern_id);
         }
 
-        // Optional: filter by date if clicked
+        // Optional filter: specific date (from calendar click)
         if ($request->date) {
             $query->where('attendance_date', $request->date);
         }
 
+        // Optional filter: date range
+        if ($request->date_range) {
+            $dates = explode(' to ', $request->date_range);
+            $start = $dates[0];
+            $end = $dates[1] ?? $dates[0];
+            $end = Carbon::parse($end)->min(Carbon::today());
+
+            $query->whereBetween('attendance_date', [$start, $end]);
+        }
+
+        // Get filtered attendances
         $attendances = $query->orderBy('attendance_date', 'desc')->get();
 
         // Build calendar events
-        $calendarEvents = Attendance::with('user')->get()->map(function ($attendance) {
+        $calendarEvents = $attendances->map(function ($attendance) {
             $color = match($attendance->status) {
                 'present' => '#22c55e',
                 'late' => '#eab308',
@@ -188,7 +204,7 @@ class AttendanceController extends Controller
             };
 
             $title = $attendance->user->name;
-            if($attendance->status === 'on leave') {
+            if ($attendance->status === 'on leave') {
                 $title .= ' (Leave)';
             } else {
                 $title .= ' - ' . ucfirst($attendance->status);
@@ -202,8 +218,44 @@ class AttendanceController extends Controller
             ];
         });
 
-        return view('supervisor.attendance.index', compact('attendances', 'interns', 'calendarEvents'));
+        // Return JSON for FullCalendar
+        return response()->json($calendarEvents);
     }
 
+    public function generatePdf(Request $request)
+    {
+        $user = Auth::user();
+        $intern = $user->intern;
+
+        if (!$intern) {
+            return back()->with('error', 'Intern record not found.');
+        }
+
+        $query = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', '<=', Carbon::today());
+
+        if ($request->year) $query->whereYear('attendance_date', $request->year);
+        if ($request->month) $query->whereMonth('attendance_date', $request->month);
+        if ($request->status) $query->where('status', $request->status);
+        if ($request->date_range) {
+            $dates = explode(' to ', $request->date_range);
+            $start = $dates[0];
+            $end = $dates[1] ?? $dates[0];
+            $end = Carbon::parse($end)->min(Carbon::today());
+            $query->whereBetween('attendance_date', [$start, $end]);
+        }
+
+        $attendances = $query->orderBy('attendance_date', 'desc')->get();
+
+        $pdf = Pdf::loadView('intern.attendance.pdf', [
+            'attendances' => $attendances,
+            'user' => $user,
+            'report_date' => $intern->report_date,
+            'end_date' => $intern->end_date,
+            'intern_duration' => $intern->intern_duration,
+        ]);
+
+        return $pdf->download('attendance-record.pdf');
+    }
 
 }

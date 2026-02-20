@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
+    Route::get('/attendance/pdf', [AttendanceController::class, 'generatePdf'])->name('attendance.pdf');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -61,6 +62,9 @@ Route::middleware('auth')->group(function () {
 
         // Delete Leave
         Route::delete('/{leave}', [LeaveController::class, 'destroy'])->name('destroy');
+
+        Route::get('/{leave}/pdf', [LeaveController::class, 'generatePdf'])->name('pdf');
+
     });
 
     // Supervisor Routes
@@ -94,7 +98,7 @@ Route::middleware('auth')->group(function () {
 
 
         // Supervisor Profile
-        Route::get('/profile', [SupervisorController::class, 'profile'])->name('profile');
+        Route::get('/profile', [ProfileController::class, 'profile'])->name('profile');
 
         // Leave Module
         Route::get('/leave', [LeaveController::class, 'index'])->name('leave.index');
