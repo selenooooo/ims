@@ -6,6 +6,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use App\Models\InternLeave;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -155,12 +156,76 @@ class AttendanceController extends Controller
         return back()->with('success', 'Attendance record deleted successfully.');
     }
 
+    public function calendar(Request $request)
+    {
+        $interns = User::whereHas('intern')->get(); // adjust if needed
+        return view('supervisor.attendance.calendar', compact('interns'));
+    }
+  
+    public function calendarEvents(Request $request)
+    {
+        // Get all active interns
+        // $interns = User::whereHas('intern')->get();
+
+        // Build query for attendance
+        $query = Attendance::with('user');
+
+        // Optional filter: specific intern
+        if ($request->intern_id) {
+            $query->where('user_id', $request->intern_id);
+        }
+
+        // Optional filter: specific date (from calendar click)
+        if ($request->date) {
+            $query->where('attendance_date', $request->date);
+        }
+
+        // Optional filter: date range
+        if ($request->date_range) {
+            $dates = explode(' to ', $request->date_range);
+            $start = $dates[0];
+            $end = $dates[1] ?? $dates[0];
+            $end = Carbon::parse($end)->min(Carbon::today());
+
+            $query->whereBetween('attendance_date', [$start, $end]);
+        }
+
+        // Get filtered attendances
+        $attendances = $query->orderBy('attendance_date', 'desc')->get();
+
+        // Build calendar events
+        $calendarEvents = $attendances->map(function ($attendance) {
+            $color = match($attendance->status) {
+                'present' => '#22c55e',
+                'late' => '#eab308',
+                'half day' => '#f97316',
+                'on leave' => '#3b82f6',
+                default => '#ef4444',
+            };
+
+            $title = $attendance->user->name;
+            if ($attendance->status === 'on leave') {
+                $title .= ' (Leave)';
+            } else {
+                $title .= ' - ' . ucfirst($attendance->status);
+            }
+
+            return [
+                'title' => $title,
+                'start' => $attendance->attendance_date,
+                'allDay' => true,
+                'color' => $color,
+            ];
+        });
+
+        // Return JSON for FullCalendar
+        return response()->json($calendarEvents);
+    }
+
     public function generatePdf(Request $request)
     {
         $user = Auth::user();
-
-        // Get the intern record for current user
-        $intern = $user->intern; // assuming User hasOne Intern relation
+        $intern = $user->intern;
 
         if (!$intern) {
             return back()->with('error', 'Intern record not found.');
@@ -169,25 +234,14 @@ class AttendanceController extends Controller
         $query = Attendance::where('user_id', $user->id)
             ->whereDate('attendance_date', '<=', Carbon::today());
 
-        // Apply filters
-        if ($request->year) {
-            $query->whereYear('attendance_date', $request->year);
-        }
-
-        if ($request->month) {
-            $query->whereMonth('attendance_date', $request->month);
-        }
-
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
+        if ($request->year) $query->whereYear('attendance_date', $request->year);
+        if ($request->month) $query->whereMonth('attendance_date', $request->month);
+        if ($request->status) $query->where('status', $request->status);
         if ($request->date_range) {
             $dates = explode(' to ', $request->date_range);
             $start = $dates[0];
             $end = $dates[1] ?? $dates[0];
             $end = Carbon::parse($end)->min(Carbon::today());
-
             $query->whereBetween('attendance_date', [$start, $end]);
         }
 
@@ -203,6 +257,5 @@ class AttendanceController extends Controller
 
         return $pdf->download('attendance-record.pdf');
     }
-
 
 }
