@@ -27,7 +27,7 @@ class LeaveTypeController extends Controller
 
         LeaveType::create($request->only('code', 'name'));
 
-        return back()->with('success', 'Leave type added successfully.');
+        return back()->with('success', 'New Leave added successfully.');
     }
 
     public function update(Request $request, LeaveType $leaveType)

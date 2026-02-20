@@ -1,6 +1,20 @@
 <x-app-layout>
     <div class="max-w-6xl mx-auto px-4 space-y-6">
 
+            @php
+                $message = session('success') ?? session('warning');
+                $bgColor = session('success') ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
+            @endphp
+
+            @if($message)
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition class="fixed top-5 inset-x-0 flex justify-center z-50">
+                    <div class="{{ $bgColor }} text-white px-6 py-4 rounded shadow-lg flex items-center space-x-3">
+                        <span>{{ $message }}</span>
+                        <button type="button" @click="show = false" class="ml-auto text-white font-bold px-2 py-1 rounded">&times;</button>
+                    </div>
+                </div>
+            @endif
+
             <!-- Add Leave Type -->
             <form method="POST" action="{{ route('supervisor.leaveType.store') }}" class="bg-white p-6 rounded shadow flex gap-4 items-end">
                 @csrf
@@ -71,6 +85,13 @@
 
 <script>
     function disableSubmit(button) {
+        const form = button.form;
+
+        if (!form.checkValidity()) {
+            form.reportValidity(); // show validation errors
+            return;
+        }
+
         button.disabled = true;
         button.innerText = "Submitting...";
         button.classList.remove('bg-blue-600', 'hover:bg-blue-700');

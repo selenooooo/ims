@@ -112,7 +112,8 @@ class SupervisorController extends Controller
             ]);
         });
 
-        return redirect()->route('supervisor.interns.index')
+        return redirect()
+            ->route('supervisor.interns.index')
             ->with('success', 'Intern registered successfully.');
     }
 
@@ -121,38 +122,55 @@ class SupervisorController extends Controller
     {
         $perPage = (int) $request->input('per_page', 20);
 
-        // Fetch active interns for the dropdown
         $interns = User::where('role', 'intern')
             ->whereHas('intern', fn($q) => $q->where('status', 'active'))
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
 
-        $showAll = $request->has('show_all'); // check if "Show All Attendance" is clicked
+        $showAll = $request->has('show_all'); 
 
         $year = !$showAll ? ($request->year ?? now()->year) : null;
         $month = !$showAll ? ($request->month ?? now()->month) : null;
+        $date = $request->date ?? null; // new date filter
 
+        // Paginated attendances for table
         $attendances = Attendance::with('user')
-            ->whereDate('attendance_date', '<=', Carbon::today())
             ->when($request->intern_id, fn($q) => $q->where('user_id', $request->intern_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when(!$showAll && $year, fn($q) => $q->whereYear('attendance_date', $year))
             ->when(!$showAll && $month, fn($q) => $q->whereMonth('attendance_date', $month))
-            ->when($request->date_range, function ($q) use ($request) {
-                [$start, $end] = explode(' to ', $request->date_range);
-                $q->whereBetween('attendance_date', [Carbon::parse($start), Carbon::parse($end)->min(Carbon::today())]);
-            })
+            ->when($date, fn($q) => $q->whereDate('attendance_date', $date)) // filter table by clicked date
             ->orderBy('attendance_date', 'desc')
             ->paginate($perPage)
             ->withQueryString();
+
+        // Calendar events (all past + future leaves)
+        $allAttendances = Attendance::with('user')
+            ->when($request->intern_id, fn($q) => $q->where('user_id', $request->intern_id))
+            ->get();
+
+        $futureLeaves = Attendance::with('user')
+            ->where('status', 'on leave')
+            ->whereDate('attendance_date', '>=', Carbon::today())
+            ->get();
+
+        $calendarEvents = $allAttendances->merge($futureLeaves)->map(function($att) {
+            return [
+                'title' => $att->user->name . ($att->status === 'on leave' ? ' (Leave)' : ''),
+                'start' => $att->attendance_date,
+                'color' => $att->status === 'on leave' ? '#F87171' : '#34D399',
+            ];
+        });
 
         return view('supervisor.attendance.index', compact(
             'attendances',
             'interns',
             'year',
             'month',
-            'showAll'
+            'showAll',
+            'calendarEvents',
+            'date' // pass date to Blade
         ));
     }
 
@@ -182,20 +200,6 @@ class SupervisorController extends Controller
         return view('supervisor.dashboard', compact('todayAttendances','todayLeaves'));
     }
 
-    public function changePassword(Request $request)
-    {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', 'min:6'],
-        ]);
-
-        auth()->user()->update([
-            'password' => Hash::make($request->password)
-        ]);
-
-        return back()->with('success', 'Password updated successfully.');
-    }
-
     public function showIntern(User $user)
     {
         $user->load('intern'); // load interns table
@@ -213,9 +217,9 @@ class SupervisorController extends Controller
         ]);
     }
 
-    public function update(Request $request, $employee_id)
+    public function update(Request $request, $user_id)
     {
-        $intern = Intern::where('employee_id', $employee_id)->firstOrFail();
+        $intern = Intern::where('user_id', $user_id)->firstOrFail();
 
         $intern->update([
             'report_date'     => $request->report_date,

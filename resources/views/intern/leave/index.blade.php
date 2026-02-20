@@ -56,6 +56,7 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Reason</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700">Submitted on</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700"></th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700">Export PDF</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -79,16 +80,9 @@
                             </td>
                             <td class="px-6 py-4">{{ $leave->reason ?? '-' }}</td>
                             <td class="px-6 py-4 text-xs">{{ $leave->created_at }}</td>
-
-                            <!-- @php
-                                $canCancel = $leave->leaveType->code !== 'IOD'
-                                    && $leave->status !== 'rejected'
-                                    && (\Carbon\Carbon::parse($leave->leave_date)->isToday() || \Carbon\Carbon::parse($leave->leave_date)->isFuture());
-                            @endphp -->
                             
                             <!-- Action Column -->
                             <td class="px-6 py-4 text-center">
-                                  @if($canCancel)
                                     <form action="{{ route('intern.leave.destroy', $leave) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this leave?');">
                                         @csrf
                                         @method('DELETE')
@@ -96,10 +90,23 @@
                                             Cancel
                                         </button>
                                     </form>
+                                    <span class="text-gray-400 italic text-xs">-</span>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                @if($leave->status === 'approved')
+                                    <a href="{{ route('intern.leave.pdf', $leave->id) }}" 
+                                    target="_blank"
+                                    class="text-green-600 hover:text-green-800 transition text-lg">
+                                        
+                                        <i class="fas fa-download"></i>
+                                        <span class="sr-only">Download PDF</span>
+                                    </a>
                                 @else
                                     <span class="text-gray-400 italic text-xs">-</span>
                                 @endif
                             </td>
+
                         </tr>
                     @empty
                         <tr>
